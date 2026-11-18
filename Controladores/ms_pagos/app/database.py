@@ -58,7 +58,7 @@ async def create_all_tables() -> None:
     # PostgreSQL requires COMMIT / AUTOCOMMIT outside a transaction block for ALTER TYPE ADD VALUE
     async with engine.connect() as conn:
         autocommit_conn = await conn.execution_options(isolation_level="AUTOCOMMIT")
-        for enum_val in ("WOMPI_NEQUI", "WOMPI_PSE", "WOMPI_BANCOLOMBIA", "WOMPI_CARD"):
+        for enum_val in ("WOMPI", "BRE_B", "EFECTIVO", "WOMPI_NEQUI", "WOMPI_PSE", "WOMPI_BANCOLOMBIA", "WOMPI_CARD"):
             await autocommit_conn.execute(
                 text(f"ALTER TYPE metodo_pago_enum ADD VALUE IF NOT EXISTS '{enum_val}'")
             )

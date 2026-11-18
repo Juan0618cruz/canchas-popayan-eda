@@ -68,7 +68,7 @@ export default function AdminReservaDrawer({
 
   // Section states
   const [showPagar, setShowPagar] = useState(false)
-  const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'TRANSFERENCIA' | 'NEQUI' | 'TARJETA'>('EFECTIVO')
+  const [metodoPago, setMetodoPago] = useState<'EFECTIVO' | 'BRE_B' | 'WOMPI'>('EFECTIVO')
 
   const [showReprogramar, setShowReprogramar] = useState(false)
   const [nuevaFecha, setNuevaFecha] = useState('')
@@ -392,9 +392,8 @@ export default function AdminReservaDrawer({
                               className="input-field text-xs"
                             >
                               <option value="EFECTIVO">💵 Efectivo (Caja Taquilla)</option>
-                              <option value="TRANSFERENCIA">🏦 Transferencia Bancaria</option>
-                              <option value="NEQUI">📲 Nequi / Daviplata</option>
-                              <option value="TARJETA">💳 Tarjeta Débito / Crédito</option>
+                              <option value="BRE_B">🔑 Bre-B</option>
+                              <option value="WOMPI">🟢 Wompi</option>
                             </select>
                           </div>
                           <button

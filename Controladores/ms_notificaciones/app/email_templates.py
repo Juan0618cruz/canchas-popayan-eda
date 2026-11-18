@@ -9,15 +9,16 @@ import html as _html
 from typing import Iterable
 
 METODO_DISPLAY: dict[str, str] = {
-    "WOMPI_NEQUI": "Wompi · Nequi",
-    "WOMPI_PSE": "Wompi · PSE (Transferencia Bancaria)",
-    "WOMPI_BANCOLOMBIA": "Wompi · Botón Bancolombia",
-    "WOMPI_CARD": "Wompi · Tarjeta Débito/Crédito",
-    "TARJETA": "Tarjeta Débito/Crédito",
+    "WOMPI": "Wompi",
     "BRE_B": "Bre-B",
-    "EFECTIVO": "Efectivo (Taquilla)",
-    "TRANSFERENCIA": "Transferencia Bancaria",
-    "NEQUI": "Nequi (Presencial)",
+    "EFECTIVO": "Efectivo",
+    "WOMPI_NEQUI": "Wompi",
+    "WOMPI_PSE": "Wompi",
+    "WOMPI_BANCOLOMBIA": "Wompi",
+    "WOMPI_CARD": "Wompi",
+    "TARJETA": "Wompi",
+    "TRANSFERENCIA": "Bre-B",
+    "NEQUI": "Bre-B",
 }
 
 _HEADER = """\
@@ -244,7 +245,7 @@ def template_pago_rechazado(data: dict) -> tuple[str, str, str]:
         greeting=f"Hola, {nombre_usuario}:",
         intro="Lamentamos informarte que la transacción fue rechazada por la entidad financiera.",
         rows=rows,
-        footer_note="Puedes reintentar el pago ingresando a 'Mis Reservas' o elegir un método diferente (Nequi, PSE o Tarjeta).",
+        footer_note="Puedes reintentar el pago ingresando a 'Mis Reservas' o elegir un método diferente (Wompi o Bre-B).",
     )
     return subject, text_body, html_body
 

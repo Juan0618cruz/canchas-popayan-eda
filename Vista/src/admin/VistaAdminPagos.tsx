@@ -16,14 +16,15 @@ function estadoPagoBadge(estado: EstadoPago) {
 }
 
 const METODO_LABELS: Record<string, string> = {
-  WOMPI_NEQUI: '💜 Wompi · Nequi',
-  WOMPI_PSE: '🏛️ Wompi · PSE',
-  WOMPI_BANCOLOMBIA: '🏦 Wompi · Bancolombia',
-  WOMPI_CARD: '💳 Wompi · Tarjeta',
-  TARJETA: '💳 Tarjeta',
+  WOMPI: '🟢 Wompi',
   BRE_B: '🔑 Bre-B',
   EFECTIVO: '💵 Efectivo',
-  TRANSFERENCIA: '🏦 Transferencia',
+  WOMPI_NEQUI: '🟢 Wompi',
+  WOMPI_PSE: '🟢 Wompi',
+  WOMPI_BANCOLOMBIA: '🟢 Wompi',
+  WOMPI_CARD: '🟢 Wompi',
+  TARJETA: '🟢 Wompi',
+  TRANSFERENCIA: '🔑 Bre-B',
 }
 
 function today() { return '2026-11-30' }
@@ -36,7 +37,7 @@ export default function VistaAdminPagos() {
   const [fechaFin, setFechaFin] = useState(today())
   const [estadoFiltro, setEstadoFiltro] = useState<EstadoPago | ''>('')
   const [presencialModal, setPresencialModal] = useState<{ reserva_id: string; complejo_id: string; monto: number } | null>(null)
-  const [metodo, setMetodo] = useState<'EFECTIVO' | 'TRANSFERENCIA'>('EFECTIVO')
+  const [metodo, setMetodo] = useState<'EFECTIVO' | 'BRE_B' | 'WOMPI'>('EFECTIVO')
   const [observaciones, setObservaciones] = useState('')
 
   const { data: pagos = [], isLoading, refetch } = useQuery({
@@ -192,16 +193,16 @@ export default function VistaAdminPagos() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Método de pago</label>
-              <div className="grid grid-cols-2 gap-2">
-                {(['EFECTIVO', 'TRANSFERENCIA'] as const).map(m => (
+              <div className="grid grid-cols-3 gap-2">
+                {(['EFECTIVO', 'BRE_B', 'WOMPI'] as const).map(m => (
                   <button
                     key={m}
                     onClick={() => setMetodo(m)}
-                    className={`py-3 rounded-xl border-2 font-semibold text-sm transition-colors ${
+                    className={`py-3 rounded-xl border-2 font-semibold text-xs sm:text-sm transition-colors ${
                       metodo === m ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'
                     }`}
                   >
-                    {m === 'EFECTIVO' ? '💵 Efectivo' : '🏦 Transferencia'}
+                    {m === 'EFECTIVO' ? '💵 Efectivo' : m === 'BRE_B' ? '🔑 Bre-B' : '🟢 Wompi'}
                   </button>
                 ))}
               </div>

@@ -54,7 +54,7 @@ export default function VistaLanding() {
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { icon: <Clock size={32} className="text-green-600" />, title: 'Reserva Online 24/7', desc: 'Reserva tu cancha favorita a cualquier hora, desde cualquier dispositivo.' },
-            { icon: <Shield size={32} className="text-green-600" />, title: 'Pago Seguro', desc: 'Integración con Bre-B y tarjeta. Tus datos siempre protegidos.' },
+            { icon: <Shield size={32} className="text-green-600" />, title: 'Pago Seguro', desc: 'Integración con Wompi y Bre-B. Tus transacciones 100% protegidas.' },
             { icon: <RotateCcw size={32} className="text-green-600" />, title: 'Cancela si necesitas', desc: 'Cancela gratis hasta 2 horas antes del partido sin complicaciones.' },
           ].map((f, i) => (
             <div key={i} className="card text-center">

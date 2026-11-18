@@ -14,14 +14,16 @@ from app.database import Base
 
 
 class MetodoPago(str, enum.Enum):
-    """Supported payment methods (Wompi Colombia + presencial)."""
+    """Supported payment methods (Wompi, Bre-B, Efectivo)."""
+    WOMPI = "WOMPI"
+    BRE_B = "BRE_B"
+    EFECTIVO = "EFECTIVO"
+    # Legacy aliases preserved for backwards compatibility with tests and history
     WOMPI_NEQUI = "WOMPI_NEQUI"
     WOMPI_PSE = "WOMPI_PSE"
     WOMPI_BANCOLOMBIA = "WOMPI_BANCOLOMBIA"
     WOMPI_CARD = "WOMPI_CARD"
     TARJETA = "TARJETA"
-    BRE_B = "BRE_B"
-    EFECTIVO = "EFECTIVO"
     TRANSFERENCIA = "TRANSFERENCIA"
 
 

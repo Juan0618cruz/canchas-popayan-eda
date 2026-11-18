@@ -49,7 +49,7 @@ export default function VistaAdminTaquilla() {
   const [cancelModal, setCancelModal] = useState<ReservaDto | null>(null)
   const [reprogramarModal, setReprogramarModal] = useState<ReservaDto | null>(null)
   const [pagoPendienteModal, setPagoPendienteModal] = useState<ReservaDto | null>(null)
-  const [metodoPagoPendiente, setMetodoPagoPendiente] = useState<'EFECTIVO' | 'TRANSFERENCIA' | 'NEQUI'>('EFECTIVO')
+  const [metodoPagoPendiente, setMetodoPagoPendiente] = useState<'EFECTIVO' | 'BRE_B' | 'WOMPI'>('EFECTIVO')
   const [motivo, setMotivo] = useState('')
   const [nuevaFecha, setNuevaFecha] = useState('')
   const [nuevaHora, setNuevaHora] = useState('')
@@ -63,7 +63,7 @@ export default function VistaAdminTaquilla() {
     hora_inicio: '',
     monto: '',
     paga_ahora: true,
-    metodo_pago: 'EFECTIVO' as 'EFECTIVO' | 'TRANSFERENCIA' | 'NEQUI' | 'TARJETA',
+    metodo_pago: 'EFECTIVO' as 'EFECTIVO' | 'BRE_B' | 'WOMPI',
   })
 
   const { data: reservas = [], isLoading } = useQuery({
@@ -478,9 +478,8 @@ export default function VistaAdminTaquilla() {
                   className="input-field text-sm"
                 >
                   <option value="EFECTIVO">💵 Efectivo (Caja / Taquilla)</option>
-                  <option value="TRANSFERENCIA">🏦 Transferencia Bancaria</option>
-                  <option value="NEQUI">📲 Nequi / Daviplata</option>
-                  <option value="TARJETA">💳 Tarjeta Débito / Crédito (Datáfono)</option>
+                  <option value="BRE_B">🔑 Bre-B</option>
+                  <option value="WOMPI">🟢 Wompi</option>
                 </select>
               </div>
             )}
@@ -610,8 +609,8 @@ export default function VistaAdminTaquilla() {
                 className="input-field text-sm"
               >
                 <option value="EFECTIVO">💵 Efectivo (Caja / Taquilla)</option>
-                <option value="TRANSFERENCIA">🏦 Transferencia Bancaria (Bancolombia, etc.)</option>
-                <option value="NEQUI">📲 Nequi / Daviplata</option>
+                <option value="BRE_B">🔑 Bre-B</option>
+                <option value="WOMPI">🟢 Wompi</option>
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Al confirmar, se registrará el pago presencial y la reserva pasará a CONFIRMADA automáticamente.

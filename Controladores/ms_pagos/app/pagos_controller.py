@@ -80,6 +80,9 @@ class PagosController:
         return await consultar_pago_por_reserva(reserva_id, db)
 
 WOMPI_METHOD_MAP: dict[str, MetodoPago] = {
+    "WOMPI": MetodoPago.WOMPI,
+    "BRE_B": MetodoPago.BRE_B,
+    "EFECTIVO": MetodoPago.EFECTIVO,
     "NEQUI": MetodoPago.WOMPI_NEQUI,
     "WOMPI_NEQUI": MetodoPago.WOMPI_NEQUI,
     "PSE": MetodoPago.WOMPI_PSE,
@@ -91,7 +94,7 @@ WOMPI_METHOD_MAP: dict[str, MetodoPago] = {
     "CARD": MetodoPago.WOMPI_CARD,
     "WOMPI_CARD": MetodoPago.WOMPI_CARD,
     "TARJETA": MetodoPago.TARJETA,
-    "BRE_B": MetodoPago.BRE_B,
+    "TRANSFERENCIA": MetodoPago.BRE_B,
 }
 
 
@@ -110,8 +113,8 @@ def _parse_date_only(val: Optional[str]) -> Optional[date]:
 
 
 def _map_wompi_method(raw_method: Optional[str]) -> MetodoPago:
-    normalized = str(raw_method or "WOMPI_CARD").strip().upper()
-    return WOMPI_METHOD_MAP.get(normalized, MetodoPago.WOMPI_CARD)
+    normalized = str(raw_method or "WOMPI").strip().upper()
+    return WOMPI_METHOD_MAP.get(normalized, MetodoPago.WOMPI)
 
 
 def _resolve_nested_value(obj: Any, dotted_path: str) -> Any:

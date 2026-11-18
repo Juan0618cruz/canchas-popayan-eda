@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  Building2,
   CheckCircle,
   CreditCard,
   ExternalLink,
-  Landmark,
+  Key,
   Loader2,
   Lock,
   Smartphone,
   XCircle,
+  Zap,
 } from 'lucide-react'
 import Modal from './Modal'
 import { extractErrorMessage, formatCOP, pagosApi } from '../lib/api'
@@ -22,44 +22,23 @@ interface PagoModalProps {
   reserva: ReservaDto
 }
 
-type WompiMetodo = 'WOMPI_NEQUI' | 'WOMPI_PSE' | 'WOMPI_BANCOLOMBIA' | 'WOMPI_CARD'
+type MetodoPagoOnline = 'WOMPI' | 'BRE_B'
 type ResultadoPago = 'APPROVED' | 'DECLINED' | null
 
-const PSE_BANCOS = [
-  'Bancolombia',
-  'Nequi',
-  'Davivienda',
-  'Banco de Bogotá',
-  'BBVA Colombia',
-  'Banco Agrario',
-  'Nu Colombia',
-  'Scotiabank Colpatria',
-]
-
-const WOMPI_PAYMENT_METHODS: Array<{
-  id: WompiMetodo
+const METODOS_DISPONIBLES: Array<{
+  id: MetodoPagoOnline
   label: string
   subtitle: string
-  icon: typeof Smartphone
+  icon: typeof CreditCard
 }> = [
-  { id: 'WOMPI_NEQUI', label: 'Nequi', subtitle: 'Celular', icon: Smartphone },
-  { id: 'WOMPI_PSE', label: 'PSE', subtitle: 'Bancos CO', icon: Building2 },
-  { id: 'WOMPI_BANCOLOMBIA', label: 'Bancolombia', subtitle: 'Botón', icon: Landmark },
-  { id: 'WOMPI_CARD', label: 'Tarjeta', subtitle: 'Débito/Crédito', icon: CreditCard },
+  { id: 'WOMPI', label: 'Wompi', subtitle: 'Pasarela Oficial', icon: CreditCard },
+  { id: 'BRE_B', label: 'Bre-B', subtitle: 'Pagos Inmediatos', icon: Smartphone },
 ]
 
 function buildLocalReference(codigoUid?: string): string {
   const randomSuffix = Math.random().toString(16).slice(2, 8).toUpperCase()
   const cleanCode = (codigoUid || 'POP').replace(/[^A-Z0-9]/gi, '').slice(-4).toUpperCase()
   return `WOMPI-POP-${cleanCode}-${randomSuffix}`
-}
-
-function mapWidgetMethodType(methodType?: string): MetodoPago {
-  const normalized = (methodType || '').toUpperCase()
-  if (normalized.includes('NEQUI')) return 'WOMPI_NEQUI'
-  if (normalized.includes('PSE')) return 'WOMPI_PSE'
-  if (normalized.includes('BANCOLOMBIA')) return 'WOMPI_BANCOLOMBIA'
-  return 'WOMPI_CARD'
 }
 
 function loadWompiWidgetScript(): Promise<boolean> {
@@ -87,7 +66,7 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
 
-  const [metodoTab, setMetodoTab] = useState<WompiMetodo>('WOMPI_NEQUI')
+  const [metodoTab, setMetodoTab] = useState<MetodoPagoOnline>('WOMPI')
   const [referencia, setReferencia] = useState<string>(() => buildLocalReference(reserva.codigo_uid))
   const [wompiPrep, setWompiPrep] = useState<WompiPrepararResponse | null>(null)
   const [resultado, setResultado] = useState<ResultadoPago>(null)
@@ -95,17 +74,16 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
   const [errorMsg, setErrorMsg] = useState('')
   const [widgetLoading, setWidgetLoading] = useState(false)
 
-  // Interactive Sandbox fields for Colombian Wompi methods
-  const [nequiCelular, setNequiCelular] = useState('3001234567')
-  const [pseBanco, setPseBanco] = useState('Bancolombia')
-  const [psePersona, setPsePersona] = useState<'Natural' | 'Jurídica'>('Natural')
-  const [pseDocumento, setPseDocumento] = useState('1061745890')
-  const [bancolombiaUsuario, setBancolombiaUsuario] = useState('deportista.popayan')
+  // Campos para Wompi (Tarjeta / Pasarela)
   const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242')
   const [cardHolder, setCardHolder] = useState(user?.nombre ?? 'Carlos Gómez')
   const [cardExpiry, setCardExpiry] = useState('12/28')
   const [cardCvv, setCardCvv] = useState('123')
   const [cardCuotas, setCardCuotas] = useState('1')
+
+  // Campos para Bre-B (Transferencia inmediata interoperable)
+  const [tipoLlave, setTipoLlave] = useState<'CELULAR' | 'CEDULA' | 'ALFANUMERICA'>('CELULAR')
+  const [brebLlave, setBrebLlave] = useState('3001234567')
 
   useEffect(() => {
     if (!isOpen || !reserva?.id) return
@@ -139,7 +117,7 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
     queryClient.invalidateQueries({ queryKey: ['eda-logs'] })
   }
 
-  const { mutate: confirmarPagoWompi, isPending } = useMutation({
+  const { mutate: confirmarPago, isPending } = useMutation({
     mutationFn: ({
       statusOutcome,
       metodo,
@@ -174,41 +152,31 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
       invalidateCaches()
     },
     onError: (err: unknown) => {
-      setErrorMsg(extractErrorMessage(err, 'No se pudo procesar el pago con Wompi.'))
+      setErrorMsg(extractErrorMessage(err, 'No se pudo procesar el pago.'))
     },
   })
 
   const buildSandboxObservations = (): string => {
-    switch (metodoTab) {
-      case 'WOMPI_NEQUI':
-        return `Wompi Sandbox · Nequi Cel: ${nequiCelular.trim() || '3001234567'}`
-      case 'WOMPI_PSE':
-        return `Wompi Sandbox · PSE ${pseBanco} (${psePersona}) Doc: ${pseDocumento}`
-      case 'WOMPI_BANCOLOMBIA':
-        return `Wompi Sandbox · Botón Bancolombia (${bancolombiaUsuario})`
-      case 'WOMPI_CARD':
-        return `Wompi Sandbox · Tarjeta ****${cardNumber.replace(/\s+/g, '').slice(-4)} (${cardCuotas} cuota/s)`
+    if (metodoTab === 'WOMPI') {
+      return `Wompi · Tarjeta ****${cardNumber.replace(/\s+/g, '').slice(-4)} (${cardCuotas} cuota/s)`
     }
+    return `Bre-B Interoperable · Llave ${tipoLlave}: ${brebLlave.trim() || '3001234567'}`
   }
 
   const handleSandboxSubmit = (statusOutcome: 'APPROVED' | 'DECLINED') => {
     setErrorMsg('')
     if (statusOutcome === 'APPROVED') {
-      if (metodoTab === 'WOMPI_NEQUI' && nequiCelular.replace(/\D/g, '').length < 10) {
-        setErrorMsg('Ingresa un número celular Nequi válido de 10 dígitos (ej: 3001234567).')
-        return
-      }
-      if (metodoTab === 'WOMPI_PSE' && !pseDocumento.trim()) {
-        setErrorMsg('Ingresa tu número de documento para continuar por PSE.')
-        return
-      }
-      if (metodoTab === 'WOMPI_CARD' && cardNumber.replace(/\D/g, '').length < 12) {
+      if (metodoTab === 'WOMPI' && cardNumber.replace(/\D/g, '').length < 12) {
         setErrorMsg('Ingresa un número de tarjeta válido para continuar.')
+        return
+      }
+      if (metodoTab === 'BRE_B' && !brebLlave.trim()) {
+        setErrorMsg('Ingresa la llave de pago Bre-B para continuar.')
         return
       }
     }
 
-    confirmarPagoWompi({
+    confirmarPago({
       statusOutcome,
       metodo: metodoTab,
       observaciones: buildSandboxObservations(),
@@ -225,7 +193,7 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
     setWidgetLoading(false)
 
     if (!loaded || !window.WidgetCheckout) {
-      setErrorMsg('No fue posible cargar el script oficial de Wompi (widget.js). Usa el modo Sandbox integrado.')
+      setErrorMsg('No fue posible cargar el script de Wompi (widget.js). Usa el modo Sandbox integrado.')
       return
     }
 
@@ -247,9 +215,9 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
       const tx = result?.transaction
       if (!tx) return
       const approved = String(tx.status).toUpperCase() === 'APPROVED'
-      confirmarPagoWompi({
+      confirmarPago({
         statusOutcome: approved ? 'APPROVED' : 'DECLINED',
-        metodo: mapWidgetMethodType(tx.paymentMethodType),
+        metodo: 'WOMPI',
         transactionId: tx.id,
         observaciones: `Wompi Widget Oficial · Estado ${tx.status}`,
       })
@@ -264,22 +232,27 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Checkout Wompi Colombia" size="lg">
-      {/* Identidad Wompi Colombia */}
-      <div className="bg-[#1A1F71] text-white rounded-xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Pasarela de Pagos" size="lg">
+      {/* Banner de identidad de pago */}
+      <div className="bg-[#1A1F71] text-white rounded-xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3 shadow-md">
         <div className="flex items-center gap-3">
-          <div className="bg-[#00C389] text-[#1A1F71] font-black text-lg px-3 py-1 rounded-lg tracking-tight">
-            wompi
+          <div className="flex items-center gap-2">
+            <span className="bg-[#00C389] text-[#1A1F71] font-black text-sm px-2.5 py-1 rounded-md tracking-tight">
+              wompi
+            </span>
+            <span className="bg-indigo-600 text-white font-bold text-xs px-2.5 py-1 rounded-md flex items-center gap-1">
+              <Zap size={12} className="text-yellow-300" /> Bre-B
+            </span>
           </div>
           <div>
-            <p className="font-bold text-sm leading-tight">Wompi Colombia · Grupo Bancolombia</p>
+            <p className="font-bold text-sm leading-tight">Pagos Seguros Colombia</p>
             <p className="text-[11px] text-indigo-200 flex items-center gap-1 mt-0.5">
               <Lock size={11} /> Ref: <span className="font-mono text-white font-semibold">{referencia}</span>
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-xs text-indigo-200 uppercase">Total a pagar</p>
+          <p className="text-xs text-indigo-200 uppercase tracking-wider">Total a pagar</p>
           <p className="text-2xl font-extrabold text-[#00C389]">{formatCOP(Number(reserva.monto))}</p>
         </div>
       </div>
@@ -292,12 +265,12 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
             {reserva.fecha} · {reserva.hora_inicio.substring(0, 5)} – {reserva.hora_fin.substring(0, 5)}
           </span>
         </div>
-        <span className="badge bg-amber-100 text-amber-800 text-xs">
+        <span className="badge bg-amber-100 text-amber-800 text-xs font-semibold">
           {resultado === 'APPROVED' ? 'CONFIRMADA' : resultado === 'DECLINED' ? 'CANCELADA' : 'PENDIENTE PAGO'}
         </span>
       </div>
 
-      {/* Resultado */}
+      {/* Pantalla de Resultado */}
       {resultado ? (
         <div
           className={`rounded-xl p-6 text-center ${
@@ -309,25 +282,27 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
           {resultado === 'APPROVED' ? (
             <>
               <CheckCircle size={52} className="mx-auto text-green-600 mb-3" />
-              <h3 className="text-xl font-bold text-green-800">¡Pago Aprobado por Wompi!</h3>
+              <h3 className="text-xl font-bold text-green-800">
+                ¡Pago Aprobado exitosamente!
+              </h3>
               <p className="text-green-700 text-sm mt-1">
-                Tu reserva quedó <strong>CONFIRMADA</strong> y enviamos la notificación a <strong>{user?.email}</strong>.
+                Tu reserva ha sido <strong>CONFIRMADA</strong> y enviamos la notificación con tu comprobante a <strong>{user?.email}</strong>.
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
                 <span className="font-mono bg-green-100 text-green-800 px-3 py-1 rounded-md">
                   Ref: {pagoData?.referencia ?? referencia}
                 </span>
                 <span className="bg-green-100 text-green-800 px-3 py-1 rounded-md font-semibold">
-                  Método: {pagoData?.metodo ?? metodoTab}
+                  Método: {pagoData?.metodo === 'BRE_B' ? 'Bre-B' : 'Wompi'}
                 </span>
               </div>
             </>
           ) : (
             <>
               <XCircle size={52} className="mx-auto text-red-600 mb-3" />
-              <h3 className="text-xl font-bold text-red-800">Pago Declinado por Wompi</h3>
+              <h3 className="text-xl font-bold text-red-800">Transacción Declinada</h3>
               <p className="text-red-700 text-sm mt-1">
-                La transacción fue rechazada y el horario ha sido liberado nuevamente.
+                El pago no pudo ser completado. El horario de la cancha ha sido liberado.
               </p>
             </>
           )}
@@ -337,8 +312,8 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
         </div>
       ) : (
         <>
-          {/* Widget oficial Wompi si VITE_WOMPI_PUBLIC_KEY está configurada */}
-          {effectivePublicKey && (
+          {/* Widget oficial Wompi si está configurada la llave */}
+          {effectivePublicKey && metodoTab === 'WOMPI' && (
             <div className="mb-4 bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center justify-between gap-3">
               <div className="text-xs text-indigo-900">
                 <p className="font-bold">Widget Oficial Wompi Activo</p>
@@ -356,12 +331,12 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
             </div>
           )}
 
-          {/* Métodos locales Wompi */}
+          {/* Selector de métodos permitidos: Wompi y Bre-B */}
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-            Elige tu medio de pago en Wompi Colombia
+            Selecciona tu método de pago
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-            {WOMPI_PAYMENT_METHODS.map(({ id, label, subtitle, icon: Icon }) => {
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {METODOS_DISPONIBLES.map(({ id, label, subtitle, icon: Icon }) => {
               const active = metodoTab === id
               return (
                 <button
@@ -371,121 +346,42 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
                     setMetodoTab(id)
                     setErrorMsg('')
                   }}
-                  className={`p-3 rounded-xl border-2 text-left transition-all ${
+                  className={`p-3.5 rounded-xl border-2 text-left transition-all ${
                     active
                       ? 'border-[#00C389] bg-emerald-50/70 shadow-sm'
                       : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}
                 >
-                  <Icon size={18} className={active ? 'text-[#1A1F71]' : 'text-gray-500'} />
-                  <p className="font-bold text-sm text-gray-900 mt-1.5">{label}</p>
-                  <p className="text-[11px] text-gray-500">{subtitle}</p>
+                  <div className="flex items-center justify-between">
+                    <Icon size={20} className={active ? 'text-[#1A1F71]' : 'text-gray-500'} />
+                    {id === 'BRE_B' && (
+                      <span className="text-[10px] font-bold bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded">
+                        Inmediato
+                      </span>
+                    )}
+                    {id === 'WOMPI' && (
+                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+                        Pasarela
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-bold text-sm text-gray-900 mt-2">{label}</p>
+                  <p className="text-xs text-gray-500">{subtitle}</p>
                 </button>
               )
             })}
           </div>
 
-          {/* Formulario interactivo por método (Sandbox Integrado) */}
+          {/* Formulario interactivo según método seleccionado */}
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4 space-y-3">
-            {metodoTab === 'WOMPI_NEQUI' && (
+            {metodoTab === 'WOMPI' && (
               <>
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm text-gray-800">Pago rápido con Nequi</p>
-                  <span className="text-[11px] bg-pink-100 text-pink-800 font-semibold px-2 py-0.5 rounded-full">
-                    Notificación Push
+                  <p className="font-semibold text-sm text-gray-800">Checkout Wompi · Tarjeta Débito / Crédito</p>
+                  <span className="text-[11px] bg-emerald-100 text-emerald-900 font-semibold px-2 py-0.5 rounded-full">
+                    Pasarela Wompi
                   </span>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Número celular Nequi (10 dígitos)
-                  </label>
-                  <input
-                    type="tel"
-                    maxLength={10}
-                    value={nequiCelular}
-                    onChange={(e) => setNequiCelular(e.target.value)}
-                    className="input-field font-mono"
-                    placeholder="3001234567"
-                  />
-                </div>
-                <p className="text-xs text-gray-500">
-                  Recibirás una notificación push en tu app Nequi para aprobar el cobro por {formatCOP(Number(reserva.monto))}.
-                </p>
-              </>
-            )}
-
-            {metodoTab === 'WOMPI_PSE' && (
-              <>
-                <p className="font-semibold text-sm text-gray-800">PSE — Transferencia Bancaria Colombia</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Banco</label>
-                    <select
-                      value={pseBanco}
-                      onChange={(e) => setPseBanco(e.target.value)}
-                      className="input-field"
-                    >
-                      {PSE_BANCOS.map((banco) => (
-                        <option key={banco} value={banco}>
-                          {banco}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de persona</label>
-                    <select
-                      value={psePersona}
-                      onChange={(e) => setPsePersona(e.target.value as 'Natural' | 'Jurídica')}
-                      className="input-field"
-                    >
-                      <option value="Natural">Persona Natural</option>
-                      <option value="Jurídica">Persona Jurídica</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Número de documento (CC / NIT)</label>
-                  <input
-                    type="text"
-                    value={pseDocumento}
-                    onChange={(e) => setPseDocumento(e.target.value)}
-                    className="input-field font-mono"
-                    placeholder="1061745890"
-                  />
-                </div>
-              </>
-            )}
-
-            {metodoTab === 'WOMPI_BANCOLOMBIA' && (
-              <>
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm text-gray-800">Botón Bancolombia</p>
-                  <span className="text-[11px] bg-yellow-100 text-yellow-900 font-semibold px-2 py-0.5 rounded-full">
-                    Transferencia Directa
-                  </span>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Usuario Sucursal Virtual Personas (Sandbox)
-                  </label>
-                  <input
-                    type="text"
-                    value={bancolombiaUsuario}
-                    onChange={(e) => setBancolombiaUsuario(e.target.value)}
-                    className="input-field"
-                    placeholder="usuario.bancolombia"
-                  />
-                </div>
-                <p className="text-xs text-gray-500">
-                  Autoriza el pago directo desde tu cuenta de ahorros o corriente Bancolombia sin salir de la plataforma.
-                </p>
-              </>
-            )}
-
-            {metodoTab === 'WOMPI_CARD' && (
-              <>
-                <p className="font-semibold text-sm text-gray-800">Tarjeta Débito / Crédito (Visa · Mastercard)</p>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Número de tarjeta</label>
                   <input
@@ -545,6 +441,48 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
                 </div>
               </>
             )}
+
+            {metodoTab === 'BRE_B' && (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-sm text-gray-800 flex items-center gap-1.5">
+                    <Key size={16} className="text-indigo-600" /> Bre-B · Transferencia Inmediata Interoperable
+                  </p>
+                  <span className="text-[11px] bg-indigo-100 text-indigo-900 font-semibold px-2 py-0.5 rounded-full">
+                    Banco de la República
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Llave Bre-B</label>
+                    <select
+                      value={tipoLlave}
+                      onChange={(e) => setTipoLlave(e.target.value as any)}
+                      className="input-field"
+                    >
+                      <option value="CELULAR">Número de Celular</option>
+                      <option value="CEDULA">Cédula de Ciudadanía / NIT</option>
+                      <option value="ALFANUMERICA">Llave Alfanumérica Personalizada</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      {tipoLlave === 'CELULAR' ? 'Celular registrado' : tipoLlave === 'CEDULA' ? 'Número de documento' : 'Código de Llave'}
+                    </label>
+                    <input
+                      type="text"
+                      value={brebLlave}
+                      onChange={(e) => setBrebLlave(e.target.value)}
+                      className="input-field font-mono"
+                      placeholder={tipoLlave === 'CELULAR' ? '3001234567' : '1061745890'}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Bre-B es el sistema oficial de pagos inmediatos e interoperables en Colombia. Los fondos se acreditan al instante entre cualquier entidad financiera.
+                </p>
+              </>
+            )}
           </div>
 
           {errorMsg && (
@@ -553,11 +491,13 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
             </div>
           )}
 
-          {/* Botones de acción Sandbox / Confirmación */}
+          {/* Botones de acción */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
             <div className="flex items-center justify-between text-xs text-slate-600 mb-2.5">
-              <span className="font-semibold">🧪 Modo Sandbox Interactivo Wompi</span>
-              <span>Callback directo a `/pagos/wompi/webhook`</span>
+              <span className="font-semibold">
+                🧪 Procesar pago con {metodoTab === 'WOMPI' ? 'Wompi' : 'Bre-B'}
+              </span>
+              <span>Respuesta inmediata EDA</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
@@ -567,7 +507,7 @@ export default function PagoModal({ isOpen, onClose, reserva }: PagoModalProps) 
                 className="bg-[#00C389] hover:bg-[#00aa77] text-[#1A1F71] font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isPending ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
-                Pagar con Wompi (APPROVED)
+                Pagar con {metodoTab === 'WOMPI' ? 'Wompi' : 'Bre-B'} (APPROVED)
               </button>
               <button
                 type="button"

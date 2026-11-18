@@ -113,13 +113,14 @@ export interface ReservaDto {
 
 export type EstadoPago = 'PENDIENTE' | 'APROBADO' | 'RECHAZADO'
 export type MetodoPago =
+  | 'WOMPI'
+  | 'BRE_B'
+  | 'EFECTIVO'
   | 'WOMPI_NEQUI'
   | 'WOMPI_PSE'
   | 'WOMPI_BANCOLOMBIA'
   | 'WOMPI_CARD'
   | 'TARJETA'
-  | 'BRE_B'
-  | 'EFECTIVO'
   | 'TRANSFERENCIA'
 
 export interface WompiPrepararResponse {

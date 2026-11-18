@@ -11,12 +11,13 @@ from pydantic import BaseModel, Field, field_validator
 from app.models import EstadoPago, MetodoPago
 
 ONLINE_METHODS = (
+    MetodoPago.WOMPI,
+    MetodoPago.BRE_B,
     MetodoPago.WOMPI_NEQUI,
     MetodoPago.WOMPI_PSE,
     MetodoPago.WOMPI_BANCOLOMBIA,
     MetodoPago.WOMPI_CARD,
     MetodoPago.TARJETA,
-    MetodoPago.BRE_B,
 )
 
 
@@ -30,8 +31,7 @@ class ProcesarPagoRequest(BaseModel):
     metodo: MetodoPago = Field(
         ...,
         description=(
-            "Online payment method: WOMPI_NEQUI, WOMPI_PSE, WOMPI_BANCOLOMBIA, "
-            "WOMPI_CARD, TARJETA or BRE_B."
+            "Online payment method: WOMPI or BRE_B."
         ),
     )
     simular_resultado: Literal["APROBADO", "RECHAZADO"] = Field(
@@ -111,7 +111,7 @@ class PagoPresencialRequest(BaseModel):
     monto: float = Field(..., gt=0, description="Amount collected in COP.")
     metodo: Union[MetodoPago, str] = Field(
         default=MetodoPago.EFECTIVO,
-        description="Presencial payment method: EFECTIVO, TRANSFERENCIA, NEQUI, TARJETA.",
+        description="Presencial payment method: EFECTIVO, BRE_B, WOMPI.",
     )
     fecha: Optional[str] = Field(None, description="Optional date of the payment (YYYY-MM-DD).")
     observaciones: Optional[str] = Field(None, max_length=512, description="Optional admin notes.")
