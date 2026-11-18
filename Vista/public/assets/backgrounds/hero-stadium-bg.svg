@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Night stadium sky to emerald turf gradient -->
+    <linearGradient id="stadiumSky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#020617" />
+      <stop offset="42%" stop-color="#064e3b" />
+      <stop offset="72%" stop-color="#065f46" />
+      <stop offset="100%" stop-color="#052e16" />
+    </linearGradient>
+
+    <!-- Stadium floodlight beams -->
+    <radialGradient id="lightLeft" cx="15%" cy="10%" r="65%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.48" />
+      <stop offset="25%" stop-color="#a7f3d0" stop-opacity="0.20" />
+      <stop offset="70%" stop-color="#10b981" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="lightRight" cx="85%" cy="10%" r="65%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.48" />
+      <stop offset="25%" stop-color="#a7f3d0" stop-opacity="0.20" />
+      <stop offset="70%" stop-color="#10b981" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Center pitch glow -->
+    <radialGradient id="centerGlow" cx="50%" cy="76%" r="52%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.32" />
+      <stop offset="60%" stop-color="#15803d" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#052e16" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Turf texture -->
+    <pattern id="heroTurfPattern" width="80" height="40" patternUnits="userSpaceOnUse">
+      <rect width="40" height="40" fill="#15803d" fill-opacity="0.28" />
+      <rect x="40" width="40" height="40" fill="#166534" fill-opacity="0.28" />
+      <circle cx="15" cy="12" r="0.9" fill="#4ade80" fill-opacity="0.14" />
+      <circle cx="55" cy="28" r="0.9" fill="#052e16" fill-opacity="0.22" />
+    </pattern>
+
+    <!-- Subtle floodlight beam cones -->
+    <linearGradient id="beamCone" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ecfdf5" stop-opacity="0.26" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="beamConeRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ecfdf5" stop-opacity="0.26" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Night backdrop -->
+  <rect width="1600" height="900" fill="url(#stadiumSky)" />
+
+  <!-- Distant stadium silhouette / stands -->
+  <path d="M 0 540 Q 400 470 800 470 Q 1200 470 1600 540 L 1600 900 L 0 900 Z" fill="#022c22" fill-opacity="0.82" />
+  <path d="M 0 585 Q 400 530 800 530 Q 1200 530 1600 585 L 1600 900 L 0 900 Z" fill="#064e3b" fill-opacity="0.55" />
+
+  <!-- Turf field lower plane -->
+  <path d="M 0 610 L 1600 610 L 1600 900 L 0 900 Z" fill="#14532d" />
+  <path d="M 0 610 L 1600 610 L 1600 900 L 0 900 Z" fill="url(#heroTurfPattern)" />
+  <rect width="1600" height="900" fill="url(#centerGlow)" />
+
+  <!-- Perspective white pitch lines -->
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.26" stroke-width="3">
+    <!-- Horizon touchline -->
+    <line x1="80" y1="620" x2="1520" y2="620" />
+    <!-- Side touchlines in perspective -->
+    <line x1="80" y1="620" x2="-80" y2="900" />
+    <line x1="1520" y1="620" x2="1680" y2="900" />
+    <!-- Halfway line -->
+    <line x1="800" y1="620" x2="800" y2="900" />
+    <!-- Perspective center circle -->
+    <ellipse cx="800" cy="755" rx="190" ry="58" />
+    <circle cx="800" cy="755" r="5" fill="#ffffff" fill-opacity="0.35" stroke="none" />
+    <!-- Left & right penalty area hints -->
+    <polyline points="20,700 220,700 175,830 -20,830" />
+    <polyline points="1580,700 1380,700 1425,830 1620,830" />
+  </g>
+
+  <!-- Stadium light towers & beams -->
+  <polygon points="210,85 880,780 420,840" fill="url(#beamCone)" />
+  <polygon points="1390,85 720,780 1180,840" fill="url(#beamConeRight)" />
+
+  <!-- Floodlight radial glow -->
+  <rect width="1600" height="900" fill="url(#lightLeft)" />
+  <rect width="1600" height="900" fill="url(#lightRight)" />
+
+  <!-- Floodlight towers -->
+  <g fill="#e2e8f0" fill-opacity="0.85">
+    <!-- Left tower bulbs -->
+    <rect x="175" y="70" width="70" height="28" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5" />
+    <circle cx="190" cy="80" r="4" fill="#ffffff" />
+    <circle cx="204" cy="80" r="4" fill="#ffffff" />
+    <circle cx="218" cy="80" r="4" fill="#ffffff" />
+    <circle cx="232" cy="80" r="4" fill="#ffffff" />
+    <circle cx="190" cy="90" r="4" fill="#d1fae5" />
+    <circle cx="204" cy="90" r="4" fill="#d1fae5" />
+    <circle cx="218" cy="90" r="4" fill="#d1fae5" />
+    <circle cx="232" cy="90" r="4" fill="#d1fae5" />
+
+    <!-- Right tower bulbs -->
+    <rect x="1355" y="70" width="70" height="28" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5" />
+    <circle cx="1370" cy="80" r="4" fill="#ffffff" />
+    <circle cx="1384" cy="80" r="4" fill="#ffffff" />
+    <circle cx="1398" cy="80" r="4" fill="#ffffff" />
+    <circle cx="1412" cy="80" r="4" fill="#ffffff" />
+    <circle cx="1370" cy="90" r="4" fill="#d1fae5" />
+    <circle cx="1384" cy="90" r="4" fill="#d1fae5" />
+    <circle cx="1398" cy="90" r="4" fill="#d1fae5" />
+    <circle cx="1412" cy="90" r="4" fill="#d1fae5" />
+  </g>
+
+  <!-- Ambient stadium bokeh dots -->
+  <g fill="#a7f3d0" fill-opacity="0.22">
+    <circle cx="340" cy="180" r="2.5" />
+    <circle cx="520" cy="130" r="1.8" />
+    <circle cx="710" cy="210" r="2.2" />
+    <circle cx="890" cy="145" r="1.8" />
+    <circle cx="1090" cy="190" r="2.6" />
+    <circle cx="1260" cy="150" r="2" />
+    <circle cx="460" cy="495" r="2" />
+    <circle cx="620" cy="480" r="1.5" />
+    <circle cx="980" cy="480" r="1.5" />
+    <circle cx="1140" cy="495" r="2" />
+  </g>
+</svg>

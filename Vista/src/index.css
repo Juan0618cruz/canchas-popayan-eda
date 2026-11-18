@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { font-family: 'Inter', system-ui, sans-serif; }
+  body {
+    background-color: #f9fafb;
+    color: #111827;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-semibold px-4 py-2 rounded-lg border border-gray-300 transition-colors disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50;
+  }
+  .input-field {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm;
+  }
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Mini Cancha Sintética para bloques horarios */
+  .mini-pitch-slot {
+    @apply relative w-full h-full min-h-[74px] rounded-xl overflow-hidden flex flex-col items-center justify-between py-1.5 px-1 select-none;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .mini-pitch-libre {
+    @apply border border-emerald-400/80 text-white cursor-pointer shadow-md shadow-emerald-950/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:border-emerald-300 ring-1 ring-emerald-400/30 hover:ring-2 hover:ring-emerald-300/80;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mini-pitch-libre:hover {
+    transform: translateY(-3px) scale(1.035);
+  }
+
+  /* Fondos y Banners responsivos y proporcionales universales */
+  .app-page-bg {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    width: 100%;
+  }
+
+  .app-banner-bg {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    width: 100%;
+  }
+
+  .landing-hero-bg {
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  .mini-pitch-libre:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .mini-pitch-reservado {
+    @apply border border-amber-400/60 text-amber-50 cursor-not-allowed shadow-sm;
+    transition: all 0.2s ease;
+  }
+
+  .mini-pitch-pasado {
+    @apply border-transparent bg-gray-100/30 text-gray-400 opacity-35 cursor-not-allowed shadow-none select-none;
+    transition: opacity 0.2s ease;
+  }
+
+  .mini-pitch-mantenimiento {
+    @apply border border-rose-200/80 text-slate-700 cursor-not-allowed shadow-none;
+    transition: all 0.2s ease;
+  }
+
+  .pitch-text-shadow {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+  }
+}

@@ -1,0 +1,271 @@
+version: "3.9"
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+
+volumes:
+  pgdata_usuarios:
+  pgdata_canchas:
+  pgdata_reservas:
+  pgdata_pagos:
+  rabbitmq_data:
+  uploads_canchas:
+  notificaciones_data:
+
+services:
+  # ─────────────────────────────────────────────
+  # BASES DE DATOS (Database-per-Service)
+  # ─────────────────────────────────────────────
+  db_usuarios:
+    image: postgres:16-alpine
+    container_name: db_usuarios
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_usuarios
+    volumes:
+      - pgdata_usuarios:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_usuarios"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db_canchas:
+    image: postgres:16-alpine
+    container_name: db_canchas
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_canchas
+    volumes:
+      - pgdata_canchas:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_canchas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db_reservas:
+    image: postgres:16-alpine
+    container_name: db_reservas
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_reservas
+    volumes:
+      - pgdata_reservas:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_reservas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db_pagos:
+    image: postgres:16-alpine
+    container_name: db_pagos
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_pagos
+    volumes:
+      - pgdata_pagos:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_pagos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # MESSAGE BROKER
+  # ─────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  # API GATEWAY
+  # ─────────────────────────────────────────────
+  api_gateway:
+    build:
+      context: ./Controladores/api_gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    ports:
+      - "0.0.0.0:8000:8000"
+    environment:
+      JWT_SECRET: "canchas_popayan_super_secret_key_2026"
+      MS_USUARIOS_URL: "http://ms_usuarios:8001"
+      MS_CANCHAS_URL: "http://ms_canchas:8002"
+      MS_RESERVAS_URL: "http://ms_reservas:8003"
+      MS_PAGOS_URL: "http://ms_pagos:8004"
+      MS_NOTIFICACIONES_URL: "http://ms_notificaciones:8005"
+    networks:
+      - frontend_net
+      - backend_net
+    depends_on:
+      ms_usuarios:
+        condition: service_started
+      ms_canchas:
+        condition: service_started
+      ms_reservas:
+        condition: service_started
+      ms_pagos:
+        condition: service_started
+      ms_notificaciones:
+        condition: service_started
+
+  # ─────────────────────────────────────────────
+  # MICROSERVICIOS
+  # ─────────────────────────────────────────────
+  ms_usuarios:
+    build:
+      context: ./Controladores/ms_usuarios
+      dockerfile: Dockerfile
+    container_name: ms_usuarios
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db_usuarios:5432/db_usuarios"
+      RABBITMQ_URL: "amqp://admin:admin@rabbitmq:5672/"
+      JWT_SECRET: "canchas_popayan_super_secret_key_2026"
+      JWT_ALGORITHM: "HS256"
+      JWT_EXPIRE_MINUTES: "1440"
+    networks:
+      - backend_net
+    depends_on:
+      db_usuarios:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ms_canchas:
+    build:
+      context: ./Controladores/ms_canchas
+      dockerfile: Dockerfile
+    container_name: ms_canchas
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db_canchas:5432/db_canchas"
+      RABBITMQ_URL: "amqp://admin:admin@rabbitmq:5672/"
+    volumes:
+      - uploads_canchas:/app/uploads
+    networks:
+      - backend_net
+    depends_on:
+      db_canchas:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ms_reservas:
+    build:
+      context: ./Controladores/ms_reservas
+      dockerfile: Dockerfile
+    container_name: ms_reservas
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db_reservas:5432/db_reservas"
+      RABBITMQ_URL: "amqp://admin:admin@rabbitmq:5672/"
+      MS_USUARIOS_URL: "http://ms_usuarios:8001"
+    networks:
+      - backend_net
+    depends_on:
+      db_reservas:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ms_pagos:
+    build:
+      context: ./Controladores/ms_pagos
+      dockerfile: Dockerfile
+    container_name: ms_pagos
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db_pagos:5432/db_pagos"
+      RABBITMQ_URL: "amqp://admin:admin@rabbitmq:5672/"
+      WOMPI_PUBLIC_KEY: "${WOMPI_PUBLIC_KEY:-}"
+      WOMPI_EVENTS_SECRET: "${WOMPI_EVENTS_SECRET:-}"
+      WOMPI_INTEGRITY_SECRET: "${WOMPI_INTEGRITY_SECRET:-}"
+      WOMPI_SANDBOX: "true"
+      MS_USUARIOS_URL: "http://ms_usuarios:8001"
+      MS_RESERVAS_URL: "http://ms_reservas:8003"
+      MS_CANCHAS_URL: "http://ms_canchas:8002"
+    networks:
+      - backend_net
+    depends_on:
+      db_pagos:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ms_notificaciones:
+    build:
+      context: ./Controladores/ms_notificaciones
+      dockerfile: Dockerfile
+    container_name: ms_notificaciones
+    restart: unless-stopped
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://admin:admin@rabbitmq:5672/}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-jpdiagon1@gmail.com}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-uinmqedieyqxswey}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Canchas Popayan}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-jpdiagon1@gmail.com}
+      SMTP_DEV_MODE: ${SMTP_DEV_MODE:-auto}
+      SMTP_TIMEOUT: ${SMTP_TIMEOUT:-5}
+      SMTP_MAX_RETRIES: ${SMTP_MAX_RETRIES:-2}
+      SMTP_RETRY_BACKOFF_SECONDS: ${SMTP_RETRY_BACKOFF_SECONDS:-1.0}
+      NOTIF_DB_PATH: "/app/data/notificaciones.db"
+      MS_USUARIOS_URL: "http://ms_usuarios:8001"
+      MS_RESERVAS_URL: "http://ms_reservas:8003"
+      MS_CANCHAS_URL: "http://ms_canchas:8002"
+    volumes:
+      - notificaciones_data:/app/data
+    networks:
+      - backend_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  # ─────────────────────────────────────────────
+  # FRONTEND (React + Vite + TailwindCSS)
+  # ─────────────────────────────────────────────
+  frontend_app:
+    build:
+      context: ./Vista
+      dockerfile: Dockerfile
+    container_name: frontend_app
+    ports:
+      - "0.0.0.0:3000:80"
+    networks:
+      - frontend_net
+    depends_on:
+      - api_gateway

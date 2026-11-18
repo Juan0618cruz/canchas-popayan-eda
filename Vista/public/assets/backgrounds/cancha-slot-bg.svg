@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" width="320" height="220" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Mowed synthetic turf stripes -->
+    <pattern id="turfStripes" width="40" height="220" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="20" height="220" fill="#15803d" />
+      <rect x="20" y="0" width="20" height="220" fill="#166534" />
+    </pattern>
+
+    <!-- Subtle synthetic turf weave micro-dots -->
+    <pattern id="turfGrain" width="8" height="8" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.6" fill="#22c55e" fill-opacity="0.16" />
+      <circle cx="6" cy="6" r="0.6" fill="#052e16" fill-opacity="0.22" />
+    </pattern>
+
+    <!-- Soft vignette for legibility and stadium depth -->
+    <radialGradient id="pitchVignette" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#052e16" stop-opacity="0.05" />
+      <stop offset="70%" stop-color="#052e16" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#022c22" stop-opacity="0.42" />
+    </radialGradient>
+
+    <!-- Clip path for penalty arcs outside penalty boxes -->
+    <clipPath id="leftArcClip">
+      <rect x="58" y="60" width="30" height="100" />
+    </clipPath>
+    <clipPath id="rightArcClip">
+      <rect x="232" y="60" width="30" height="100" />
+    </clipPath>
+  </defs>
+
+  <!-- Base turf -->
+  <rect width="320" height="220" fill="url(#turfStripes)" />
+  <rect width="320" height="220" fill="url(#turfGrain)" />
+  <rect width="320" height="220" fill="url(#pitchVignette)" />
+
+  <!-- White pitch markings (soft opacity so time & price text stays crystal clear) -->
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.46" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer boundary -->
+    <rect x="14" y="14" width="292" height="192" rx="3" />
+
+    <!-- Halfway line -->
+    <line x1="160" y1="14" x2="160" y2="206" />
+
+    <!-- Center circle & center spot -->
+    <circle cx="160" cy="110" r="32" />
+    <circle cx="160" cy="110" r="3" fill="#ffffff" fill-opacity="0.55" stroke="none" />
+
+    <!-- Left penalty box & 6-yard box -->
+    <rect x="14" y="54" width="44" height="112" />
+    <rect x="14" y="80" width="16" height="60" />
+    <path d="M 14 92 L 8 92 L 8 128 L 14 128" stroke-opacity="0.35" stroke-width="1.8" />
+    <circle cx="44" cy="110" r="2.2" fill="#ffffff" fill-opacity="0.5" stroke="none" />
+    <circle cx="44" cy="110" r="24" clip-path="url(#leftArcClip)" />
+
+    <!-- Right penalty box & 6-yard box -->
+    <rect x="262" y="54" width="44" height="112" />
+    <rect x="290" y="80" width="16" height="60" />
+    <path d="M 306 92 L 312 92 L 312 128 L 306 128" stroke-opacity="0.35" stroke-width="1.8" />
+    <circle cx="276" cy="110" r="2.2" fill="#ffffff" fill-opacity="0.5" stroke="none" />
+    <circle cx="276" cy="110" r="24" clip-path="url(#rightArcClip)" />
+
+    <!-- Corner arcs -->
+    <path d="M 14 23 A 9 9 0 0 0 23 14" />
+    <path d="M 297 14 A 9 9 0 0 0 306 23" />
+    <path d="M 14 197 A 9 9 0 0 1 23 206" />
+    <path d="M 297 206 A 9 9 0 0 1 306 197" />
+  </g>
+</svg>
